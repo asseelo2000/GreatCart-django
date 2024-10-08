@@ -38,7 +38,29 @@ def add_to_cart(request, product_id):
     
     return redirect("cart")  # Redirect to the cart page
 
+def decrease_item_quantity(request, product_id):
+    """Remove a specific product from the cart."""
+    cart = ShoppingCart.objects.get(cart_id=_cart_id(request))  # Get the cart using session id
+    product = get_object_or_404(Product, id=product_id)  # Get the product
+    cart_item = CartItme.objects.get(product=product, cart=cart)     # Get the cart item to be removed
+ 
+    if cart_item.quantity > 1:
+        cart_item.quantity -= 1  # decrease an item from the total item quantity
+        cart_item.save()
+    else:
+        cart_item.delete()  # Remove the item from the cart
+    
+    return redirect('cart')  # Redirect back to the cart page
 
+def remove_from_cart(request, product_id):
+    cart = ShoppingCart.objects.get(cart_id=_cart_id(request))  # Get the cart using session id
+    product = get_object_or_404(Product, id=product_id)  # Get the product
+    cart_item = CartItme.objects.get(product=product, cart=cart)     # Get the cart item to be removed
+    try:
+        cart_item.delete()
+    except CartItme.DoesNotExist:
+        pass 
+    return redirect("cart")
 # Display the cart_item with its details in the cart page
 def cart(request,total = 0, quantity = 0, cart_items = None ): 
     try:
@@ -50,7 +72,7 @@ def cart(request,total = 0, quantity = 0, cart_items = None ):
             quantity += item.quantity
         tax = (2 * total) / 100
         grand_total = total + tax
-        
+
     except ShoppingCart.DoesNotExist:
         pass  # If the cart does not exist, pass, and the template will handle an empty cart(means ignore)
 
