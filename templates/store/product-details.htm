@@ -72,7 +72,7 @@
 				{% if single_product.stock_quantity <= 0 %}
 				 <h5 style="color:red">Out of stock</h5>
 					{% else %}
-					<a href="./product-detail.htm" class="btn  btn-primary"> <span class="text">Add to
+					<a href="{% url 'add_to_cart' single_product.id %}" class="btn  btn-primary"> <span class="text">Add to
 							cart</span> <i class="fas fa-shopping-cart"></i> </a>
 					{%endif%}
 			</article> <!-- product-info-aside .// -->

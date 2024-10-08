@@ -16,6 +16,10 @@ class CartItme(models.Model):
     quantity = models.IntegerField()
     is_active = models.BooleanField(default=1)
 
+    def subtotal(self):
+        """Calculate the subtotal for the cart item."""
+        return self.product.price * self.quantity
+        
     def __str__(self):
         return self.product
 
