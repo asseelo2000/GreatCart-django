@@ -1,8 +1,10 @@
 from django.http import HttpResponse
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from cart.models import CartItme, ShoppingCart
 from cart.views import _cart_id
 from store.models import Product, Category
+
 
 # Create your views here.
 
@@ -16,14 +18,24 @@ def store(request, category_slug=None):
         products = Product.objects.filter(
             category=categories, is_avaliable=True
         )  # Filter products by the selected category
+
+        # Set up the paginator for each category
+        paginator = Paginator(products, 1)  # Show 1 products per page
+        page = request.GET.get('page')  # Get the page number from the URL
+        paged_products = paginator.get_page(page)  # Get the products for that page
         products_count = products.count()
     else:
         # Query all available products (stock_quantity > 0)
         products = Product.objects.all().filter(stock_quantity__gt=0)
         products_count = products.count()
 
+        # Set up the paginator for all products
+        paginator = Paginator(products, 6)  # Show 6 products per page
+        page = request.GET.get('page')  # Get the page number from the URL
+        paged_products = paginator.get_page(page)  # Get the products for that page
+
     context = {
-        "products": products,
+        "products": paged_products,
         "products_count": products_count,
     }
     return render(request, "store/store.htm", context)
