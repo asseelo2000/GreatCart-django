@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.db.models import Q
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from cart.models import CartItme, ShoppingCart
@@ -26,7 +26,7 @@ def store(request, category_slug=None):
         products_count = products.count()
     else:
         # Query all available products (stock_quantity > 0)
-        products = Product.objects.all().filter(stock_quantity__gt=0)
+        products = Product.objects.all().filter(stock_quantity__gt=0).order_by('id') # orderd for consistent pagination
         products_count = products.count()
 
         # Set up the paginator for all products
@@ -64,3 +64,26 @@ def product_details(request, category_slug, product_slug):
     }
 
     return render(request, "store/product-details.htm", context)
+
+def search(request):
+    products = Product.objects.all().order_by('id')  # Default ordering
+    # Get the search term from the GET request
+    search_query = request.GET.get('keyword')
+    if search_query:
+        products = products.filter(
+            Q(product_name__icontains=search_query) | Q(description__icontains=search_query)
+        )  # Search in product name and description fields
+
+    #  pagination
+    paginator = Paginator(products, 6)  # Show 6 products per page
+    page = request.GET.get('page')
+    paged_products = paginator.get_page(page)
+    products_count = products.count()
+    
+    context = {
+        'products': paged_products,
+        'search_query': search_query,
+        'products_count':products_count,
+    }
+    return render(request, 'store/store.htm', context)
+
