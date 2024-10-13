@@ -18,6 +18,9 @@ def _cart_id(request):
 
 # Add a product to the cart
 def add_to_cart(request, product_id):
+    product_color = request.GET['color']
+    product_size = request.GET['size']
+    
     product = get_object_or_404(Product, id=product_id)  # get the product
     try:
         cart = ShoppingCart.objects.get(
