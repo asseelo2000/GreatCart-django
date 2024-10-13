@@ -23,3 +23,17 @@ class Product(models.Model):
     def get_absolute_url(self):
         return reverse('product_details', args=[self.category.slug, self.slug])
     
+
+class Variation(models.Model):
+    VARIATION_CATEGORY_CHOICES = (
+        ('color', 'Color'),
+        ('size', 'Size'),
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variation_category = models.CharField(max_length=50, choices=VARIATION_CATEGORY_CHOICES)
+    variation_value = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.variation_value} ({self.variation_category})" 
