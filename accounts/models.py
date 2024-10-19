@@ -47,9 +47,9 @@ class Account(AbstractBaseUser):
     last_name    = models.CharField(max_length= 50)
     username     = models.CharField(max_length= 50, unique= True)
     email        = models.EmailField(max_length= 100, unique= True)
-    phone_regex  = RegexValidator(regex=r'^\+?967?\d{7,9}$', message="Phone number must be entered in the format: '+967999999999'. Up to 9 digits allowed.")
+    phone_regex = RegexValidator(regex=r'^\d{9}$', message="Phone number must be exactly 9 digits in the format '7########.")
     phone_number = models.CharField(validators=[phone_regex], max_length=13, blank=True)
-    
+    # Updated regex for the new format (9 digits only)
     class Meta:
         verbose_name = ("account")
         verbose_name_plural = ("accounts")
