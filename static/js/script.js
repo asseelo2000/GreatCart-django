@@ -45,6 +45,10 @@ $(document).ready(function() {
     });
 
 
+    // // Timeout code to hide alert after 3 seconds
+    // setTimeout(function() {
+    //     $('.alert').fadeOut('slow');
+    // }, 3000); // 5000 milliseconds = 3 seconds
 
 	//////////////////////// Bootstrap tooltip
 	if($('[data-toggle="tooltip"]').length>0) {  // check if element exists
@@ -57,4 +61,9 @@ $(document).ready(function() {
     
 }); 
 // jquery end
+
+setTimeout(function() {
+    $('#message').fadeOut('slow')
+}, 3000);
+
 
