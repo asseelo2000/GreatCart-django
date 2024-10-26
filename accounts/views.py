@@ -1,5 +1,5 @@
 from email.message import EmailMessage
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from .forms import RegistrationForm
 from .models import Account
 from django.conf import settings
@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.template.loader import render_to_string
-from django.http import HttpResponse
+from django.utils.html import strip_tags
 # Create your views here.
 
 
@@ -99,3 +99,75 @@ def activate_email(request, uidb64, token):
 @login_required(login_url = 'login') # To ensure only the loged in accounts goes to dashboard 
 def dashboard(request):
     return render(request, "accounts/dashboard.htm")
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        if Account.objects.filter(email=email).exists():
+            user = Account.objects.get(email__exact = email)
+            # Generate a token for the user
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            current_site = get_current_site(request)
+            subject = "Reset Your Password"
+
+            # Prepare email context and message
+            html_content = render_to_string('accounts/reset_password_email.htm', {
+                'user': user,
+                'domain': current_site,
+                'uid': uid,
+                'token': token,
+            })
+            text_content = strip_tags(html_content)  # Fallback content for plain text
+
+            # Use EmailMultiAlternatives for HTML emails
+            email_message = EmailMultiAlternatives(
+                subject,
+                text_content,
+                to=[email]
+            )
+            email_message.attach_alternative(html_content, "text/html")
+            email_message.send()
+            
+            messages.success(request, "A password reset link has been sent to your email.")
+            return redirect('login')
+        
+        else: 
+            messages.error(request, "Account with this email does not exist.")
+            return redirect('forgot_password')
+    
+    return render(request, "accounts/forgot_password.htm")
+
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid']= uid
+        messages.success(request, "Please reset Your password")
+        return redirect('reset_password')
+    else:
+        messages.error(request, "The password reset link is invalid or has expired.")
+        return redirect('login')
+    
+def reset_password(request):
+    if request.method == "POST":
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if new_password == confirm_password:
+                uid = request.session.get('uid')
+                user = Account.objects.get(pk=uid)
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, "Your password has been reset successfully. You can now log in.")
+                return redirect('login')
+            else:
+                messages.error(request, "Passwords do not match. Please try again.")
+                return redirect('reset_password')
+    else:
+        return render(request, "accounts/reset_password.htm")
