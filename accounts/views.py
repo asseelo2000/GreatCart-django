@@ -1,7 +1,9 @@
 from email.message import EmailMessage
 from django.core.mail import EmailMessage, EmailMultiAlternatives
+from cart.views import _cart_id
 from .forms import RegistrationForm
 from .models import Account
+from cart.models import ShoppingCart, CartItme
 from django.conf import settings
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
@@ -65,6 +67,18 @@ def login(request):
 
         user = auth.authenticate(email=email, password=password)
         if user is not None:
+            try:
+              cart = ShoppingCart.objects.get(cart_id = _cart_id(request))
+              is_cart_items_exists = CartItme.objects.filter( cart=cart).exists()
+              if is_cart_items_exists:
+                  cart_item = CartItme.objects.filter(cart=cart)
+
+                  for item in cart_item:
+                      item.user = user
+                      item.save()
+
+            except:
+                pass
             auth.login(request, user)
             messages.success(request, 'You are successfully loged-in')
             return redirect('dashboard')

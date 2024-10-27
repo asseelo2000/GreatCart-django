@@ -1,12 +1,8 @@
 from django.shortcuts import render
-
-# Create your views here.
-
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import ShoppingCart, CartItme
 from store.models import Product, Variation
-from django.http import HttpResponse, HttpResponseRedirect
-
+from django.contrib.auth.decorators import login_required
 
 # Function to get the cart or create one if it doesn't exist, it is private by adding the "_" at the start of the function
 def _cart_id(request):
@@ -120,6 +116,8 @@ def cart(request, total=0, quantity=0, cart_items=None):
         "grand_total": grand_total,
     }
     return render(request, "store/cart.htm", context)
+
+@login_required(login_url = 'login') # To ensure only the loged in accounts goes to checkout 
 def checkout(request, total=0, quantity=0, cart_items=None):
     try:
         cart = ShoppingCart.objects.get(cart_id=_cart_id(request))
