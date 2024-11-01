@@ -96,8 +96,13 @@ def remove_from_cart(request, product_id, cart_item_id):
 # Display the cart_item with its details in the cart page
 def cart(request, total=0, quantity=0, cart_items=None):
     try:
-        cart = ShoppingCart.objects.get(cart_id=_cart_id(request))
-        cart_items = CartItme.objects.filter(cart=cart, is_active=True)
+        tax = 0  # Initialize tax with a default value
+        grand_total = 0  # Initialize grand_total with a default value
+        if request.user.is_authenticated:
+            cart_items = CartItme.objects.filter(user=request.user, is_active=True)
+        else:
+            cart = ShoppingCart.objects.get(cart_id=_cart_id(request))
+            cart_items = CartItme.objects.filter(cart=cart, is_active=True)
 
         for item in cart_items:
             total += item.product.price * item.quantity
@@ -120,6 +125,8 @@ def cart(request, total=0, quantity=0, cart_items=None):
 @login_required(login_url = 'login') # To ensure only the loged in accounts goes to checkout 
 def checkout(request, total=0, quantity=0, cart_items=None):
     try:
+        tax = 0  # Initialize tax with a default value
+        grand_total = 0  # Initialize grand_total with a default value
         cart = ShoppingCart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItme.objects.filter(cart=cart, is_active=True)
 
